@@ -1,9 +1,11 @@
 package com.crispcv.app
 
 import android.content.Context
-import android.content.Intent
+import android.graphics.Paint
+import android.graphics.pdf.PdfDocument
 import android.net.Uri
 import android.os.Bundle
+import java.io.FileOutputStream
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -46,8 +48,18 @@ private val Soft = Color(0xFFF5F1F4)
     item { FeatureCard(Icons.Default.Lock, "Confidentiel par défaut", "Vos données restent sur votre appareil.") }; item { FeatureCard(Icons.Default.PictureAsPdf, "PDF professionnel", "Export prêt à envoyer, même hors connexion.") }; item { FeatureCard(Icons.Default.AutoAwesome, "Des modèles qui vous ressemblent", "Une mise en page claire, lisible et moderne.") }
 } }
 
-@Composable private fun StudioScreen() { val context=androidx.compose.ui.platform.LocalContext.current; val prefs=context.getSharedPreferences("crispcv",Context.MODE_PRIVATE); var name by remember { mutableStateOf(prefs.getString("name","") ?: "") }; var title by remember { mutableStateOf(prefs.getString("title","") ?: "") }; var saved by remember { mutableStateOf(false) }
-    LazyColumn(Modifier.fillMaxSize().padding(24.dp), verticalArrangement=Arrangement.spacedBy(14.dp)) { item { Text("Mon CV", style=MaterialTheme.typography.headlineMedium, fontWeight=FontWeight.Bold); Text("Tout est enregistré sur ce téléphone.", color=MaterialTheme.colorScheme.onSurfaceVariant) }; item { SectionTitle("Coordonnées") }; item { Field("Nom complet",name){name=it; saved=false} }; item { Field("Titre professionnel",title){title=it; saved=false} }; item { Button({ prefs.edit().putString("name",name).putString("title",title).apply(); saved=true }, Modifier.fillMaxWidth()) { Icon(Icons.Default.Save,null); Spacer(Modifier.width(8.dp)); Text(if(saved) "Enregistré" else "Enregistrer") } }; item { SectionTitle("Prochainement dans votre CV") }; item { FeatureCard(Icons.Default.Work, "Expériences professionnelles", "Ajoutez vos postes et réalisations chiffrées.") }; item { FeatureCard(Icons.Default.School, "Formation et compétences", "Organisez votre profil clairement.") } }
+@Composable private fun StudioScreen() {
+    val context=androidx.compose.ui.platform.LocalContext.current; val prefs=context.getSharedPreferences("crispcv",Context.MODE_PRIVATE)
+    var name by remember { mutableStateOf(prefs.getString("name","") ?: "") }; var title by remember { mutableStateOf(prefs.getString("title","") ?: "") }; var email by remember { mutableStateOf(prefs.getString("email","") ?: "") }; var city by remember { mutableStateOf(prefs.getString("city","") ?: "") }; var summary by remember { mutableStateOf(prefs.getString("summary","") ?: "") }; var saved by remember { mutableStateOf(false) }
+    val save={ prefs.edit().putString("name",name).putString("title",title).putString("email",email).putString("city",city).putString("summary",summary).apply(); saved=true }
+    val create=rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")){ uri -> if(uri!=null) writeCvPdf(context,uri,name,title,email,city,summary) }
+    LazyColumn(Modifier.fillMaxSize().padding(24.dp), verticalArrangement=Arrangement.spacedBy(14.dp)) {
+        item { Text("Mon CV", style=MaterialTheme.typography.headlineMedium, fontWeight=FontWeight.Bold); Text("Tout est enregistré sur ce téléphone.", color=MaterialTheme.colorScheme.onSurfaceVariant) }
+        item { SectionTitle("Coordonnées") }; item { Field("Nom complet",name){name=it;saved=false} }; item { Field("Titre professionnel",title){title=it;saved=false} }; item { Field("E-mail",email){email=it;saved=false} }; item { Field("Ville / pays",city){city=it;saved=false} }
+        item { SectionTitle("Profil professionnel") }; item { OutlinedTextField(summary,{summary=it;saved=false},label={Text("Votre résumé en 3 à 4 lignes")},modifier=Modifier.fillMaxWidth(),minLines=4) }
+        item { Row(horizontalArrangement=Arrangement.spacedBy(10.dp),modifier=Modifier.fillMaxWidth()){ Button(save,Modifier.weight(1f)){Icon(Icons.Default.Save,null);Spacer(Modifier.width(6.dp));Text(if(saved)"Enregistré" else "Sauvegarder")}; OutlinedButton({create.launch("CV-${name.ifBlank{"CrispCV"}}.pdf")},Modifier.weight(1f)){Icon(Icons.Default.PictureAsPdf,null);Spacer(Modifier.width(6.dp));Text("Exporter PDF")} } }
+        item { SectionTitle("Sections à ajouter") }; item { FeatureCard(Icons.Default.Work,"Expériences professionnelles","Ajoutez vos postes et réalisations chiffrées.") }; item { FeatureCard(Icons.Default.School,"Formation et compétences","Organisez votre profil clairement.") }
+    }
 }
 @Composable private fun Field(label:String,value:String,onChange:(String)->Unit)=OutlinedTextField(value,onChange,label={Text(label)},modifier=Modifier.fillMaxWidth(),singleLine=true)
 @Composable private fun SectionTitle(text:String)=Text(text,style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold,modifier=Modifier.padding(top=8.dp))
@@ -56,5 +68,9 @@ private val Soft = Color(0xFFF5F1F4)
 }
 
 @Composable private fun ConverterScreen() { var uri by remember { mutableStateOf<Uri?>(null) }; var message by remember { mutableStateOf("Choisissez un fichier sur votre téléphone") }; val picker=rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()){ u->uri=u; if(u!=null) message="Fichier sélectionné : ${u.lastPathSegment ?: "document"}" }; LazyColumn(Modifier.fillMaxSize().padding(24.dp),verticalArrangement=Arrangement.spacedBy(16.dp)) { item { Text("Convertisseur",style=MaterialTheme.typography.headlineMedium,fontWeight=FontWeight.Bold); Text("Vos fichiers restent sur votre appareil.",color=MaterialTheme.colorScheme.onSurfaceVariant) }; item { Card(Modifier.fillMaxWidth(),colors=CardDefaults.cardColors(containerColor=Soft)) { Column(Modifier.padding(22.dp),horizontalAlignment=Alignment.CenterHorizontally) { Icon(Icons.Default.UploadFile,null,tint=Red,modifier=Modifier.size(48.dp)); Text("PDF, images et documents",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold); Text(message); Button({picker.launch(arrayOf("application/pdf","image/*","text/plain","application/vnd.openxmlformats-officedocument.wordprocessingml.document"))},Modifier.padding(top=12.dp)){Text("Choisir un fichier")} } } }; item { FeatureCard(Icons.Default.PictureAsPdf,"Image vers PDF","Sélectionnez une image puis créez un PDF localement.") }; item { FeatureCard(Icons.Default.Compress,"Compresser un PDF","Outil local disponible dans la prochaine version.") }; item { if(uri!=null) Button({ message="Prêt à traiter localement" },Modifier.fillMaxWidth()){Text("Préparer la conversion") } } } }
+
+private fun writeCvPdf(context: Context, uri: Uri, name:String, title:String, email:String, city:String, summary:String) {
+    val doc=PdfDocument(); val page=doc.startPage(PdfDocument.PageInfo.Builder(595,842,1).create()); val c=page.canvas; val p=Paint(Paint.ANTI_ALIAS_FLAG); p.color=android.graphics.Color.rgb(178,58,46); p.textSize=28f; p.typeface=android.graphics.Typeface.DEFAULT_BOLD; c.drawText(name.ifBlank{"Mon CV"},40f,65f,p); p.color=android.graphics.Color.DKGRAY; p.textSize=15f; c.drawText(title,40f,95f,p); p.textSize=11f; c.drawText(listOf(email,city).filter{it.isNotBlank()}.joinToString("  •  "),40f,120f,p); p.textSize=13f; var y=170f; summary.chunked(85).forEach{c.drawText(it,40f,y,p);y+=19}; doc.finishPage(page); context.contentResolver.openOutputStream(uri)?.use{doc.writeTo(it)}; doc.close()
+}
 
 @Composable private fun FeatureCard(icon:androidx.compose.ui.graphics.vector.ImageVector,title:String,body:String){Card(Modifier.fillMaxWidth()){Row(Modifier.padding(18.dp),verticalAlignment=Alignment.CenterVertically){Icon(icon,null,tint=Red);Spacer(Modifier.width(16.dp));Column{Text(title,fontWeight=FontWeight.Bold);Text(body,color=MaterialTheme.colorScheme.onSurfaceVariant)}}}}

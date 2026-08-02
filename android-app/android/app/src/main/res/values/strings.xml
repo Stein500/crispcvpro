@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CrispCV Pro</string>
+    <string name="title_activity_main">CrispCV Pro</string>
+    <string name="package_name">com.crispcvpro.app</string>
+    <string name="custom_url_scheme">com.crispcvpro.app</string>
+</resources>

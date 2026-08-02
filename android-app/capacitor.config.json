@@ -1,0 +1,8 @@
+{
+  "appId": "com.crispcvpro.app",
+  "appName": "CrispCV Pro",
+  "webDir": "public",
+  "server": {
+    "androidScheme": "https"
+  }
+}

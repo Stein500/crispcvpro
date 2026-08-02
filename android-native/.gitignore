@@ -1,0 +1,32 @@
+# Android
+*.iml
+.idea/
+gradle/
+build/
+local.properties
+*.apk
+*.aab
+
+# Android Studio
+*.iml
+.idea/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Local configuration
+local.properties
+
+# Build outputs
+build/
+app/build/
+
+# Gradle cache
+.gradle/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#FAFAF8"/>
+  <rect x="0" y="600" width="1200" height="30" fill="#0A0A0A"/>
+  <rect x="0" y="600" width="300" height="30" fill="#B23A2E"/>
+  <g transform="translate(90,210) scale(3.1)">
+    <path d="M15 4h26l14 14v40a2 2 0 0 1-2 2H15a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" fill="#0A0A0A"/>
+    <path d="M41 4v14h14Z" fill="#B23A2E"/>
+    <path d="M21 33.5 28 40.5 44 24.5" fill="none" stroke="#FFFFFF" stroke-width="5.5"/>
+  </g>
+  <text x="310" y="310" font-family="'Space Grotesk',system-ui,sans-serif" font-weight="700" font-size="88" fill="#0A0A0A" letter-spacing="-2">Crisp<tspan fill="#6B6B6B" font-weight="500">CV</tspan></text>
+  <text x="312" y="380" font-family="Inter,system-ui,sans-serif" font-size="34" fill="#6B6B6B">Un CV net. Le bon format. Les bonnes adresses.</text>
+  <g font-family="'JetBrains Mono',monospace" font-size="22" fill="#0A0A0A">
+    <rect x="310" y="420" width="150" height="42" rx="4" fill="none" stroke="#B0B0B0"/>
+    <text x="330" y="449">STUDIO</text>
+    <rect x="478" y="420" width="170" height="42" rx="4" fill="none" stroke="#B0B0B0"/>
+    <text x="498" y="449">CONVERT</text>
+    <rect x="666" y="420" width="200" height="42" rx="4" fill="none" stroke="#B0B0B0"/>
+    <text x="686" y="449">RESSOURCES</text>
+  </g>
+  <text x="312" y="520" font-family="Inter,system-ui,sans-serif" font-size="24" fill="#B23A2E">Gratuit · Sans compte · 100 % local</text>
+</svg>

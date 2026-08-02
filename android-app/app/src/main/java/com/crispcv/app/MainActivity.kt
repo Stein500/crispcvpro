@@ -45,7 +45,7 @@ private val Soft = Color(0xFFF5F1F4)
 
 @Composable fun CrispCVApp() {
     val nav = rememberNavController(); val entry by nav.currentBackStackEntryAsState(); val route = entry?.destination?.route
-    Scaffold(bottomBar = { NavigationBar { listOf("home" to Icons.Default.Home, "studio" to Icons.Default.Description, "guides" to Icons.AutoMirrored.Filled.MenuBook, "convert" to Icons.Default.SwapHoriz).forEach { (r, icon) -> NavigationBarItem(route==r, { nav.navigate(r) { launchSingleTop=true } }, { Icon(icon, null) }, label={Text(mapOf("home" to "Accueil", "studio" to "Mes CV", "guides" to "Guides", "convert" to "Convertir")[r]!!)}) } }}) { pad ->
+    Scaffold(bottomBar = { NavigationBar(containerColor=Color(0xFFF4EFF8), tonalElevation=0.dp) { listOf("home" to Icons.Default.Home, "studio" to Icons.Default.Description, "guides" to Icons.AutoMirrored.Filled.MenuBook, "convert" to Icons.Default.SwapHoriz).forEach { (r, icon) -> NavigationBarItem(route==r, { nav.navigate(r) { launchSingleTop=true } }, { Icon(icon, null) }, label={Text(mapOf("home" to "Accueil", "studio" to "Mes CV", "guides" to "Guides", "convert" to "Convertir")[r]!!)}) } }}) { pad ->
         AnimatedContent(targetState=route ?: "home", transitionSpec={ fadeIn() togetherWith fadeOut() }, label="navigation") { NavHost(nav, "home", Modifier.padding(pad)) { composable("home") { HomeScreen { nav.navigate("studio") } }; composable("studio") { StudioScreen() }; composable("guides") { GuidesScreen() }; composable("convert") { ConverterScreen() } } }
     }
 }

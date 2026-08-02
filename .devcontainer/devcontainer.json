@@ -1,0 +1,25 @@
+{
+  "name": "CrispCV Android",
+  "image": "mcr.microsoft.com/devcontainers/android:1-34-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "jdkDistro": "temurin"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "fwcd.kotlin",
+        "vscjava.vscode-gradle",
+        "redhat.java"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic"
+      }
+    }
+  },
+  "postCreateCommand": "cd android-app && chmod +x gradlew 2>/dev/null || true",
+  "forwardPorts": [],
+  "remoteUser": "vscode"
+}

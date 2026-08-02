@@ -14,6 +14,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,7 +46,7 @@ private val Soft = Color(0xFFF5F1F4)
 @Composable fun CrispCVApp() {
     val nav = rememberNavController(); val entry by nav.currentBackStackEntryAsState(); val route = entry?.destination?.route
     Scaffold(bottomBar = { NavigationBar { listOf("home" to Icons.Default.Home, "studio" to Icons.Default.Description, "guides" to Icons.AutoMirrored.Filled.MenuBook, "convert" to Icons.Default.SwapHoriz).forEach { (r, icon) -> NavigationBarItem(route==r, { nav.navigate(r) { launchSingleTop=true } }, { Icon(icon, null) }, label={Text(mapOf("home" to "Accueil", "studio" to "Mes CV", "guides" to "Guides", "convert" to "Convertir")[r]!!)}) } }}) { pad ->
-        NavHost(nav, "home", Modifier.padding(pad)) { composable("home") { HomeScreen { nav.navigate("studio") } }; composable("studio") { StudioScreen() }; composable("guides") { GuidesScreen() }; composable("convert") { ConverterScreen() } }
+        AnimatedContent(targetState=route ?: "home", transitionSpec={ fadeIn() togetherWith fadeOut() }, label="navigation") { NavHost(nav, "home", Modifier.padding(pad)) { composable("home") { HomeScreen { nav.navigate("studio") } }; composable("studio") { StudioScreen() }; composable("guides") { GuidesScreen() }; composable("convert") { ConverterScreen() } } }
     }
 }
 
@@ -89,4 +94,4 @@ private fun writeCvPdf(context: Context, uri: Uri, name:String, title:String, em
     val doc=PdfDocument(); val page=doc.startPage(PdfDocument.PageInfo.Builder(595,842,1).create()); val c=page.canvas; val p=Paint(Paint.ANTI_ALIAS_FLAG); p.color=android.graphics.Color.rgb(178,58,46); p.textSize=28f; p.typeface=android.graphics.Typeface.DEFAULT_BOLD; c.drawText(name.ifBlank{"Mon CV"},40f,65f,p); p.color=android.graphics.Color.DKGRAY; p.textSize=15f; c.drawText(title,40f,95f,p); p.textSize=11f; c.drawText(listOf(email,city).filter{it.isNotBlank()}.joinToString("  •  "),40f,120f,p); p.textSize=13f; var y=170f; listOf("PROFIL" to summary,"EXPÉRIENCE" to experience,"FORMATION" to education,"COMPÉTENCES" to skills).forEach{(head,text)-> if(text.isNotBlank()){p.color=android.graphics.Color.rgb(178,58,46);p.typeface=android.graphics.Typeface.DEFAULT_BOLD;c.drawText(head,40f,y,p);y+=22;p.color=android.graphics.Color.DKGRAY;p.typeface=android.graphics.Typeface.DEFAULT; text.chunked(85).forEach{c.drawText(it,40f,y,p);y+=18};y+=18}}; doc.finishPage(page); context.contentResolver.openOutputStream(uri)?.use{doc.writeTo(it)}; doc.close()
 }
 
-@Composable private fun FeatureCard(icon:androidx.compose.ui.graphics.vector.ImageVector,title:String,body:String){Card(Modifier.fillMaxWidth()){Row(Modifier.padding(18.dp),verticalAlignment=Alignment.CenterVertically){Icon(icon,null,tint=Red);Spacer(Modifier.width(16.dp));Column{Text(title,fontWeight=FontWeight.Bold);Text(body,color=MaterialTheme.colorScheme.onSurfaceVariant)}}}}
+@Composable private fun FeatureCard(icon:androidx.compose.ui.graphics.vector.ImageVector,title:String,body:String){Card(Modifier.fillMaxWidth().animateContentSize(),shape=RoundedCornerShape(22.dp)){Row(Modifier.padding(18.dp),verticalAlignment=Alignment.CenterVertically){Icon(icon,null,tint=Red);Spacer(Modifier.width(16.dp));Column{Text(title,fontWeight=FontWeight.Bold);Text(body,color=MaterialTheme.colorScheme.onSurfaceVariant)}}}}

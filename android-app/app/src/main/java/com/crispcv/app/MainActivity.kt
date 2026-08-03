@@ -31,7 +31,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.animation.core.RepeatMode
@@ -90,7 +89,7 @@ private fun CrispCVWebShell() {
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AndroidView(
-            modifier = Modifier.fillMaxSize().windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars),
+            modifier = Modifier.fillMaxSize(),
             factory = { context ->
                 WebView(context).apply {
                     webView = this

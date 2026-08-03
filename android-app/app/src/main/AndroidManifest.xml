@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application android:theme="@style/Theme.CrispCV" android:label="CrispCV" android:icon="@drawable/ic_crispcv" android:roundIcon="@drawable/ic_crispcv" android:allowBackup="true" android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>

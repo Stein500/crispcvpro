@@ -2,7 +2,13 @@ package com.crispcv.app
 
 import android.app.DownloadManager
 import android.content.Context
+import android.content.ContentValues
 import android.net.Uri
+import android.os.Environment
+import android.provider.MediaStore
+import android.util.Base64
+import android.webkit.JavascriptInterface
+import android.widget.Toast
 import android.os.Bundle
 import android.os.Message
 import android.webkit.CookieManager
@@ -84,7 +90,7 @@ private fun CrispCVWebShell() {
                         }
                         override fun onPageFinished(view: WebView?, url: String?) {
                             loading = false
-                            view?.evaluateJavascript("document.documentElement.style.scrollBehavior='smooth'; document.body.style.webkitFontSmoothing='antialiased'; void(0);", null)
+                            view?.evaluateJavascript("document.documentElement.style.scrollBehavior='smooth'; document.body.style.webkitFontSmoothing='antialiased'; (function(){if(window.__crispDownload)return;window.__crispDownload=1;document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[download]');if(!a||!a.href||!a.href.startsWith('blob:'))return;e.preventDefault();fetch(a.href).then(function(r){return r.blob()}).then(function(b){var fr=new FileReader();fr.onload=function(){AndroidDownload.saveBase64(a.download||'CrispCV-export',b.type||'application/octet-stream',fr.result.split(',')[1])};fr.readAsDataURL(b)}).catch(function(){alert('Téléchargement impossible')})},true)})(); void(0);", null)
                         }
                         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                             val url = request.url.toString()
@@ -135,6 +141,18 @@ private fun CrispSplash(progress: Float) {
     }
 }
 
+private class CrispDownloadBridge(private val context: Context) {
+    @JavascriptInterface fun saveBase64(filename: String, mime: String, payload: String) {
+        runCatching {
+            val bytes = Base64.decode(payload, Base64.DEFAULT)
+            val values = ContentValues().apply { put(MediaStore.Downloads.DISPLAY_NAME, filename); put(MediaStore.Downloads.MIME_TYPE, mime); put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS) }
+            val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: error("storage")
+            context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: error("write")
+            Toast.makeText(context, "Fichier téléchargé dans Téléchargements", Toast.LENGTH_LONG).show()
+        }.onFailure { Toast.makeText(context, "Téléchargement impossible : ${it.message ?: "erreur"}", Toast.LENGTH_LONG).show() }
+    }
+}
+
 private fun configureCrispWebView(context: Context, webView: WebView, onFileChooser: (android.webkit.ValueCallback<Array<Uri>>, android.content.Intent) -> Unit, onProgress: (Float) -> Unit) {
     with(webView.settings) {
         javaScriptEnabled = true
@@ -157,6 +175,7 @@ private fun configureCrispWebView(context: Context, webView: WebView, onFileChoo
     webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
     CookieManager.getInstance().setAcceptCookie(true)
     CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
+    webView.addJavascriptInterface(CrispDownloadBridge(context), "AndroidDownload")
     webView.webChromeClient = object : WebChromeClient() {
         override fun onProgressChanged(view: WebView?, newProgress: Int) { onProgress(newProgress / 100f) }
         override fun onShowFileChooser(view: WebView?, callback: android.webkit.ValueCallback<Array<Uri>>, params: WebChromeClient.FileChooserParams): Boolean {
@@ -171,6 +190,7 @@ private fun configureCrispWebView(context: Context, webView: WebView, onFileChoo
         }
     }
     webView.setDownloadListener(DownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+        if (!url.startsWith("http://") && !url.startsWith("https://")) return@DownloadListener
         val request = DownloadManager.Request(Uri.parse(url)).apply {
             setMimeType(mimeType)
             addRequestHeader("User-Agent", userAgent)

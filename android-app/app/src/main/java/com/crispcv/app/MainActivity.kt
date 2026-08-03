@@ -78,7 +78,11 @@ private fun CrispCVWebShell() {
     var networkError by remember { mutableStateOf(false) }
     var fileCallback by remember { mutableStateOf<android.webkit.ValueCallback<Array<Uri>>?>(null) }
     val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        fileCallback?.onReceiveValue(if (result.resultCode == android.app.Activity.RESULT_OK) result.data?.data?.let { arrayOf(it) } else null)
+        val data = result.data
+        val uris = if (result.resultCode == android.app.Activity.RESULT_OK && data != null) {
+            buildList { data.data?.let { add(it) }; data.clipData?.let { clip -> for (i in 0 until clip.itemCount) add(clip.getItemAt(i).uri) } }.distinct().toTypedArray()
+        } else null
+        fileCallback?.onReceiveValue(uris)
         fileCallback = null
     }
 
@@ -176,6 +180,8 @@ private fun configureCrispWebView(context: Context, webView: WebView, onFileChoo
         setSupportZoom(false)
         cacheMode = WebSettings.LOAD_DEFAULT
         mediaPlaybackRequiresUserGesture = false
+        setSupportMultipleWindows(false)
+        javaScriptCanOpenWindowsAutomatically = false
         userAgentString = "$userAgentString CrispCVAndroid/2.0"
     }
     webView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
@@ -195,10 +201,7 @@ private fun configureCrispWebView(context: Context, webView: WebView, onFileChoo
             return true
         }
         override fun onCreateWindow(view: WebView?, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message?): Boolean {
-            val transport = resultMsg?.obj as? WebView.WebViewTransport ?: return false
-            transport.webView = view
-            resultMsg.sendToTarget()
-            return true
+            return false
         }
     }
     webView.setDownloadListener(DownloadListener { url, userAgent, contentDisposition, mimeType, _ ->

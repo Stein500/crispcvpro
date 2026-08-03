@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
 private fun CrispCVWebShell() {
     var webView: WebView? by remember { mutableStateOf(null) }
     var loading by remember { mutableStateOf(true) }
+    var progress by remember { mutableFloatStateOf(0f) }
     var fileCallback by remember { mutableStateOf<android.webkit.ValueCallback<Array<Uri>>?>(null) }
     val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         fileCallback?.onReceiveValue(if (result.resultCode == android.app.Activity.RESULT_OK) result.data?.data?.let { arrayOf(it) } else null)
@@ -52,7 +53,7 @@ private fun CrispCVWebShell() {
             factory = { context ->
                 WebView(context).apply {
                     webView = this
-                    configureCrispWebView(context, this) { callback, intent -> fileCallback = callback; filePicker.launch(intent) }
+                    configureCrispWebView(context, this, { callback, intent -> fileCallback = callback; filePicker.launch(intent) }, { value -> progress = value })
                     webViewClient = object : WebViewClient() {
                         override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                             loading = true
@@ -75,11 +76,11 @@ private fun CrispCVWebShell() {
             },
             update = { webView = it }
         )
-        if (loading) CircularProgressIndicator()
+        if (loading) LinearProgressIndicator(progress={progress.coerceIn(0f,1f)}, modifier=Modifier.fillMaxWidth().align(Alignment.TopCenter))
     }
 }
 
-private fun configureCrispWebView(context: Context, webView: WebView, onFileChooser: (android.webkit.ValueCallback<Array<Uri>>, android.content.Intent) -> Unit) {
+private fun configureCrispWebView(context: Context, webView: WebView, onFileChooser: (android.webkit.ValueCallback<Array<Uri>>, android.content.Intent) -> Unit, onProgress: (Float) -> Unit) {
     with(webView.settings) {
         javaScriptEnabled = true
         domStorageEnabled = true
@@ -97,6 +98,7 @@ private fun configureCrispWebView(context: Context, webView: WebView, onFileChoo
     CookieManager.getInstance().setAcceptCookie(true)
     CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
     webView.webChromeClient = object : WebChromeClient() {
+        override fun onProgressChanged(view: WebView?, newProgress: Int) { onProgress(newProgress / 100f) }
         override fun onShowFileChooser(view: WebView?, callback: android.webkit.ValueCallback<Array<Uri>>, params: WebChromeClient.FileChooserParams): Boolean {
             onFileChooser(callback, params.createIntent())
             return true

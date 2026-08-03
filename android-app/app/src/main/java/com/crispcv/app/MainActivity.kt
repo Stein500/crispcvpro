@@ -84,6 +84,7 @@ private fun CrispCVWebShell() {
                         }
                         override fun onPageFinished(view: WebView?, url: String?) {
                             loading = false
+                            view?.evaluateJavascript("document.documentElement.style.scrollBehavior='smooth'; document.body.style.webkitFontSmoothing='antialiased'; void(0);", null)
                         }
                         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                             val url = request.url.toString()
@@ -143,12 +144,17 @@ private fun configureCrispWebView(context: Context, webView: WebView, onFileChoo
         allowContentAccess = true
         builtInZoomControls = false
         displayZoomControls = false
+        setSupportZoom(false)
         cacheMode = WebSettings.LOAD_DEFAULT
         mediaPlaybackRequiresUserGesture = false
         userAgentString = "$userAgentString CrispCVAndroid/2.0"
     }
     webView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
-    webView.overScrollMode = WebView.OVER_SCROLL_NEVER
+    webView.overScrollMode = WebView.OVER_SCROLL_IF_CONTENT_SCROLLS
+    webView.isVerticalScrollBarEnabled = false
+    webView.isHorizontalScrollBarEnabled = false
+    webView.scrollBarStyle = WebView.SCROLLBARS_INSIDE_OVERLAY
+    webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
     CookieManager.getInstance().setAcceptCookie(true)
     CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
     webView.webChromeClient = object : WebChromeClient() {

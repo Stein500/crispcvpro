@@ -18,10 +18,24 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.material3.Text
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.dp
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.ui.viewinterop.AndroidView
 import com.crispcv.app.ui.theme.CrispCVTheme
@@ -77,7 +91,24 @@ private fun CrispCVWebShell() {
             },
             update = { webView = it }
         )
-        if (loading) LinearProgressIndicator(progress={progress.coerceIn(0f,1f)}, modifier=Modifier.fillMaxWidth().align(Alignment.TopCenter))
+        if (loading) {
+            LinearProgressIndicator(progress={progress.coerceIn(0f,1f)}, modifier=Modifier.fillMaxWidth().align(Alignment.TopCenter))
+            CrispSplash(progress)
+        }
+    }
+}
+
+@Composable
+private fun CrispSplash(progress: Float) {
+    val transition = rememberInfiniteTransition(label = "splash")
+    val pulse by transition.animateFloat(0.94f, 1.06f, infiniteRepeatable(tween(900), RepeatMode.Reverse), label = "logoPulse")
+    androidx.compose.material3.Surface(Modifier.fillMaxSize(), color=Color(0xFFFAFAF8)) {
+        Column(Modifier.fillMaxSize(), horizontalAlignment=Alignment.CenterHorizontally, verticalArrangement=Arrangement.Center) {
+            Image(painterResource(com.crispcv.app.R.drawable.ic_crispcv), null, Modifier.size(88.dp).graphicsLayer(scaleX=pulse,scaleY=pulse))
+            Text("CrispCV", style=MaterialTheme.typography.headlineMedium, fontWeight=FontWeight.Bold, color=Color(0xFF171717), modifier=Modifier.padding(top=18.dp))
+            Text("Un CV net. Le bon format.", style=MaterialTheme.typography.bodyLarge, color=Color(0xFF6B6B6B), modifier=Modifier.padding(top=6.dp))
+            LinearProgressIndicator(progress={progress.coerceIn(0f,1f)}, color=Color(0xFFB23A2E), trackColor=Color(0xFFE5E2DE), modifier=Modifier.fillMaxWidth(.58f).padding(top=28.dp))
+        }
     }
 }
 

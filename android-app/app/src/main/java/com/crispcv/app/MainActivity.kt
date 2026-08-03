@@ -10,7 +10,10 @@ import android.util.Base64
 import android.webkit.JavascriptInterface
 import android.widget.Toast
 import android.os.Bundle
+import android.os.Build
 import android.os.Message
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.webkit.CookieManager
 import android.webkit.DownloadListener
 import android.webkit.WebChromeClient
@@ -28,6 +31,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Button
 import androidx.compose.animation.core.RepeatMode
@@ -55,6 +59,13 @@ private const val CRISPCV_URL = "https://crispcvpro.vercel.app/"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, true)
+        window.statusBarColor = android.graphics.Color.rgb(250,250,248)
+        window.navigationBarColor = android.graphics.Color.rgb(250,250,248)
+        if (Build.VERSION.SDK_INT >= 26) window.decorView.systemUiVisibility = android.view.View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        if (Build.VERSION.SDK_INT >= 33) requestPermissions(arrayOf("android.permission.POST_NOTIFICATIONS"), 44)
+        val channel = NotificationChannel("crispcv_downloads", "Téléchargements CrispCV", NotificationManager.IMPORTANCE_DEFAULT)
+        getSystemService(NotificationManager::class.java)?.createNotificationChannel(channel)
         setContent { CrispCVTheme { CrispCVWebShell() } }
     }
 }
@@ -75,7 +86,7 @@ private fun CrispCVWebShell() {
 
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars),
             factory = { context ->
                 WebView(context).apply {
                     webView = this

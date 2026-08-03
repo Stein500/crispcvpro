@@ -90,7 +90,7 @@ private fun CrispCVWebShell() {
                         }
                         override fun onPageFinished(view: WebView?, url: String?) {
                             loading = false
-                            view?.evaluateJavascript("document.documentElement.style.scrollBehavior='smooth'; document.body.style.webkitFontSmoothing='antialiased'; (function(){if(window.__crispDownload)return;window.__crispDownload=1;document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[download]');if(!a||!a.href||!a.href.startsWith('blob:'))return;e.preventDefault();fetch(a.href).then(function(r){return r.blob()}).then(function(b){var fr=new FileReader();fr.onload=function(){AndroidDownload.saveBase64(a.download||'CrispCV-export',b.type||'application/octet-stream',fr.result.split(',')[1])};fr.readAsDataURL(b)}).catch(function(){alert('Téléchargement impossible')})},true)})(); void(0);", null)
+                            view?.evaluateJavascript("document.documentElement.style.scrollBehavior='smooth'; document.body.style.webkitFontSmoothing='antialiased'; (function(){var s=document.getElementById('crispAndroidPolish');if(!s){s=document.createElement('style');s.id='crispAndroidPolish';s.textContent='dialog,[role=dialog],.modal,.modal-content,.sheet,.drawer,.bottom-sheet{max-height:calc(100vh - 24px)!important;overflow-y:auto!important;padding-bottom:calc(24px + env(safe-area-inset-bottom))!important;z-index:2147483647!important}body{overscroll-behavior-y:contain}';document.head.appendChild(s)}if(window.__crispDownload)return;window.__crispDownload=1;document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[download]');if(!a||!a.href||!a.href.startsWith('blob:'))return;e.preventDefault();fetch(a.href).then(function(r){return r.blob()}).then(function(b){var fr=new FileReader();fr.onload=function(){AndroidDownload.saveBase64(a.download||'CrispCV-export',b.type||'application/octet-stream',fr.result.split(',')[1])};fr.readAsDataURL(b)}).catch(function(){alert('Le téléchargement n’a pas pu être préparé. Réessayez.')})},true)})(); void(0);", null)
                         }
                         override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                             val url = request.url.toString()
@@ -173,6 +173,7 @@ private fun configureCrispWebView(context: Context, webView: WebView, onFileChoo
     webView.isHorizontalScrollBarEnabled = false
     webView.scrollBarStyle = WebView.SCROLLBARS_INSIDE_OVERLAY
     webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
+    if (android.os.Build.VERSION.SDK_INT >= 26) webView.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true)
     CookieManager.getInstance().setAcceptCookie(true)
     CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
     webView.addJavascriptInterface(CrispDownloadBridge(context), "AndroidDownload")

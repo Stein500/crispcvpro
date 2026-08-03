@@ -18,8 +18,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.Button
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -54,6 +58,7 @@ private fun CrispCVWebShell() {
     var webView: WebView? by remember { mutableStateOf(null) }
     var loading by remember { mutableStateOf(true) }
     var progress by remember { mutableFloatStateOf(0f) }
+    var networkError by remember { mutableStateOf(false) }
     var fileCallback by remember { mutableStateOf<android.webkit.ValueCallback<Array<Uri>>?>(null) }
     val filePicker = androidx.activity.compose.rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         fileCallback?.onReceiveValue(if (result.resultCode == android.app.Activity.RESULT_OK) result.data?.data?.let { arrayOf(it) } else null)
@@ -72,6 +77,10 @@ private fun CrispCVWebShell() {
                     webViewClient = object : WebViewClient() {
                         override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
                             loading = true
+                            networkError = false
+                        }
+                        override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: android.webkit.WebResourceError?) {
+                            if (request?.isForMainFrame == true) { loading = false; networkError = true }
                         }
                         override fun onPageFinished(view: WebView?, url: String?) {
                             loading = false
@@ -94,6 +103,19 @@ private fun CrispCVWebShell() {
         if (loading) {
             LinearProgressIndicator(progress={progress.coerceIn(0f,1f)}, modifier=Modifier.fillMaxWidth().align(Alignment.TopCenter))
             CrispSplash(progress)
+        }
+        if (networkError) NetworkError { webView?.reload() }
+    }
+}
+
+@Composable
+private fun NetworkError(onRetry: () -> Unit) {
+    androidx.compose.material3.Surface(Modifier.fillMaxSize(), color=Color(0xFFFAFAF8)) {
+        Column(Modifier.fillMaxSize(), horizontalAlignment=Alignment.CenterHorizontally, verticalArrangement=Arrangement.Center) {
+            Image(painterResource(com.crispcv.app.R.drawable.ic_crispcv), null, Modifier.size(64.dp))
+            Text("CrispCV est momentanément hors connexion", style=MaterialTheme.typography.titleLarge, fontWeight=FontWeight.Bold, color=Color(0xFF171717), modifier=Modifier.padding(top=18.dp))
+            Text("Vérifiez votre connexion puis réessayez.", color=Color(0xFF6B6B6B), modifier=Modifier.padding(12.dp))
+            Button(onRetry) { Text("Réessayer") }
         }
     }
 }
